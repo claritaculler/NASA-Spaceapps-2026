@@ -195,6 +195,7 @@
                                     <span class="metric-unit">mSv</span>
                                 </div>
                                 <span class="metric-threshold-tag">Límite: &gt;250 mSv CRÍTICO</span>
+                                <span class="metric-evidence-tag n1">N1 · NASA-STD-3001 Vol.1 §4.8.2</span>
                             </div>
                             <div class="metric-cell">
                                 <span class="metric-name">Acumulada en Carrera</span>
@@ -203,6 +204,7 @@
                                     <span class="metric-unit">mSv</span>
                                 </div>
                                 <span class="metric-threshold-tag">Límite: &gt;600 mSv CRÍTICO</span>
+                                <span class="metric-evidence-tag n1">N1 · NASA-STD-3001 / NASEM 2021</span>
                                 <div class="progress-bar-wrap">
                                     <div id="careerRadBar" class="progress-bar-fill" style="width: 24%;"></div>
                                 </div>
@@ -227,6 +229,7 @@
                                     <span class="metric-unit">horas</span>
                                 </div>
                                 <span class="metric-threshold-tag">Alerta: &lt;6.0 h</span>
+                                <span class="metric-evidence-tag n1">N1 · NASA-STD-3001 Vol.1 y 2</span>
                             </div>
                             <div class="metric-cell">
                                 <span class="metric-name">Caída HRV RMSSD</span>
@@ -235,6 +238,7 @@
                                     <span class="metric-unit">%</span>
                                 </div>
                                 <span class="metric-threshold-tag">Alerta: &gt;25.0%</span>
+                                <span class="metric-evidence-tag n3">N3 · análogo terrestre</span>
                             </div>
                             <div class="metric-cell">
                                 <span class="metric-name">Tiempo de Reacción PVT</span>
@@ -243,6 +247,7 @@
                                     <span class="metric-unit">ms</span>
                                 </div>
                                 <span class="metric-threshold-tag">Nominal: &lt;300 ms</span>
+                                <span class="metric-evidence-tag n2">N2 · literatura de vuelo (ISS)</span>
                             </div>
                         </div>
                     </div>
@@ -264,6 +269,7 @@
                                     <span class="metric-unit">min</span>
                                 </div>
                                 <span class="metric-threshold-tag">Modo Autónomo Forzado</span>
+                                <span class="metric-evidence-tag n1">N1 · NASA SP-2009-566</span>
                             </div>
                             <div class="metric-cell">
                                 <span class="metric-name">Suministros Médicos Restantes</span>
@@ -272,6 +278,7 @@
                                     <span class="metric-unit">días</span>
                                 </div>
                                 <span class="metric-threshold-tag">Margen de Reserva: 1.8x</span>
+                                <span class="metric-evidence-tag n1">N1 · regla de vuelo operativa</span>
                             </div>
                         </div>
                     </div>
@@ -293,6 +300,7 @@
                                     <span class="metric-unit">LPM</span>
                                 </div>
                                 <span class="metric-threshold-tag">Crítico: &gt;110 LPM</span>
+                                <span class="metric-evidence-tag n4">N4 · norma clínica terrestre</span>
                             </div>
                             <div class="metric-cell">
                                 <span class="metric-name">Presión Arterial</span>
@@ -301,6 +309,7 @@
                                     <span class="metric-unit">mmHg</span>
                                 </div>
                                 <span class="metric-threshold-tag">Crítico: &gt;155/95 mmHg</span>
+                                <span class="metric-evidence-tag n4">N4 · terrestre · no validado en µg</span>
                             </div>
                             <div class="metric-cell">
                                 <span class="metric-name">Nervio Óptico (ONSD)</span>
@@ -309,6 +318,7 @@
                                     <span class="metric-unit">mm</span>
                                 </div>
                                 <span class="metric-threshold-tag">Crítico: &gt;5.8 mm (SANS ICP)</span>
+                                <span class="metric-evidence-tag n2">N2 · literatura de vuelo (SANS)</span>
                             </div>
                             <div class="metric-cell">
                                 <span class="metric-name">Ejercicio Diario</span>
@@ -317,6 +327,7 @@
                                     <span class="metric-unit">horas</span>
                                 </div>
                                 <span class="metric-threshold-tag">Objetivo: 2.0 h/día</span>
+                                <span class="metric-evidence-tag n1">N1 · ISS Generic Flight Rules §B</span>
                             </div>
                         </div>
                     </div>
@@ -338,6 +349,7 @@
                                     <span class="metric-unit">mmHg</span>
                                 </div>
                                 <span class="metric-threshold-tag">Crítico: &gt;3.0 mmHg (Hipercapnia)</span>
+                                <span class="metric-evidence-tag n1">N1 · NASA-STD-3001 Vol.2 V2 6022</span>
                             </div>
                             <div class="metric-cell">
                                 <span class="metric-name">SpO2 Arterial</span>
@@ -346,6 +358,7 @@
                                     <span class="metric-unit">%</span>
                                 </div>
                                 <span class="metric-threshold-tag">Crítico: &lt;95% (Hipoxia)</span>
+                                <span class="metric-evidence-tag n4">N4 · norma clínica terrestre</span>
                             </div>
                             <div class="metric-cell">
                                 <span class="metric-name">Temp. Corporal Central</span>
@@ -354,8 +367,18 @@
                                     <span class="metric-unit">°C</span>
                                 </div>
                                 <span class="metric-threshold-tag">Crítico: &gt;38.5 °C (Fiebre Espacial)</span>
+                                <span class="metric-evidence-tag n4">N4 · norma clínica terrestre</span>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Leyenda de niveles de evidencia (tarea 38) -->
+                    <div class="evidence-legend">
+                        <span><i style="background: var(--bio-green)"></i> N1 · límite oficial de NASA</span>
+                        <span><i style="background: var(--hud-cyan)"></i> N2 · literatura de vuelo revisada por pares</span>
+                        <span><i style="background: var(--warn-amber)"></i> N3 · análogo terrestre, valor estimado</span>
+                        <span><i style="background: #c89bff"></i> N4 · norma clínica terrestre, no validada en microgravedad</span>
+                        <span><i style="background: rgba(136,162,184,.5)"></i> gris rayado · sin medición reciente</span>
                     </div>
 
                 </div>

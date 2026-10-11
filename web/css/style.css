@@ -994,3 +994,104 @@ body::before {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--hud-cyan);
 }
+
+/* ==========================================================================
+   Nivel de evidencia y estado "sin medición"  —  tareas 37 y 38
+   ========================================================================== */
+
+/* --- Tarea 38: de dónde sale cada umbral ---------------------------------- */
+
+.metric-evidence-tag {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.02em;
+  margin-top: 3px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  align-self: flex-start;
+  border: 1px solid transparent;
+}
+
+/* N1 — límite oficial de NASA: se aplica tal cual */
+.metric-evidence-tag.n1 {
+  color: var(--bio-green);
+  border-color: rgba(0, 255, 157, 0.35);
+  background: rgba(0, 255, 157, 0.07);
+}
+
+/* N2 — literatura de vuelo revisada por pares */
+.metric-evidence-tag.n2 {
+  color: var(--hud-cyan);
+  border-color: rgba(0, 243, 255, 0.35);
+  background: rgba(0, 243, 255, 0.07);
+}
+
+/* N3 — análogo terrestre: valor estimado */
+.metric-evidence-tag.n3 {
+  color: var(--warn-amber);
+  border-color: rgba(255, 183, 3, 0.35);
+  background: rgba(255, 183, 3, 0.07);
+}
+
+/* N4 — norma clínica terrestre, NO validada en microgravedad */
+.metric-evidence-tag.n4 {
+  color: #c89bff;
+  border-color: rgba(200, 155, 255, 0.35);
+  background: rgba(200, 155, 255, 0.07);
+}
+
+/* --- Tarea 37: sin medición reciente -------------------------------------- */
+/* El gris no significa salud. Significa que no tenemos dato para afirmar nada. */
+
+.metric-cell.no-data {
+  border-color: rgba(136, 162, 184, 0.28);
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(136, 162, 184, 0.05) 0 6px,
+      rgba(136, 162, 184, 0.11) 6px 12px
+    );
+  animation: none;
+}
+
+.metric-cell.no-data .metric-value,
+.metric-cell.no-data .metric-unit {
+  color: var(--text-muted);
+}
+
+.metric-cell.no-data .metric-evidence-tag {
+  opacity: 0.35;
+}
+
+.metric-cell.no-data .metric-name::after {
+  content: ' · SIN MEDICIÓN';
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+}
+
+/* Leyenda de niveles, al pie de la matriz biomédica */
+.evidence-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.evidence-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.evidence-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  display: inline-block;
+}

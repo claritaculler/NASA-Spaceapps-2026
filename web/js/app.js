@@ -196,6 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn('[VitalGrid UI] Conexión cerrada');
             connectionLabel.textContent = 'DESCONECTADO (REINTENTANDO)';
             connectionPill.className = 'status-pill disconnected';
+            marcarTodoSinMedicion();
             scheduleReconnect();
         };
 
@@ -227,6 +228,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Formato seguro de valores -----------------------------------------
+    // Devuelven null cuando el dato no llegó. setMetric interpreta null como
+    // "sin medición" y pinta la celda en gris, en vez de mostrar un número viejo.
+    const esNum = (v) => typeof v === 'number' && Number.isFinite(v);
+    const f = (v, dec) => esNum(v) ? v.toFixed(dec) : null;
+    const n = (v) => (v === null || v === undefined) ? null : v;
+
     // --- Ingestión de Telemetría RIDGE ---
     function handleRidgeTelemetry(data, raw) {
         currentPayload = data;
@@ -235,14 +243,20 @@ document.addEventListener('DOMContentLoaded', () => {
         crewIdEl.textContent = data.crew_member_id || 'CMD-01';
 
         // Nivel de Salud
-        const score = data.health_score ?? 100;
-        healthScoreNum.textContent = score;
-        
+        // Si el backend no manda el puntaje, no asumimos salud perfecta:
+        // lo mostramos como sin medición.
+        const sinScore = !esNum(data.health_score);
+        const score = sinScore ? 0 : data.health_score;
+        healthScoreNum.textContent = sinScore ? '—' : score;
+
         // Progreso del anillo (circunferencia = 2 * PI * 70 = 440)
         const offset = 440 - (score / 100) * 440;
-        healthGaugeProgress.style.strokeDashoffset = offset;
+        healthGaugeProgress.style.strokeDashoffset = sinScore ? 440 : offset;
 
-        if (score >= 80) {
+        if (sinScore) {
+            healthGaugeProgress.style.stroke = 'var(--text-muted)';
+            healthScoreNum.style.color = 'var(--text-muted)';
+        } else if (score >= 80) {
             healthGaugeProgress.style.stroke = 'var(--bio-green)';
             healthScoreNum.style.color = '#fff';
         } else if (score >= 50) {
@@ -254,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Tríada de Supervivencia
-        const surv = data.survival_status;
+        const surv = data.survival_status || {};
         isVitalsPresent = surv.vital_signs_present;
 
         updateSurvivalPill(vitalSignsPill, surv.vital_signs_present, 'DETECTADOS (ACTIVO)', 'ASISTOLIA / PARO CARDÍACO');
@@ -262,19 +276,23 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSurvivalPill(cabinPressurePill, surv.cabin_pressure_nominal, '101.3 kPa NOMINAL', '¡DESCOMPRESIÓN DE CABINA!');
 
         // Actualizar Métricas RIDGE
-        const r = data.telemetry_ridge.R_radiation;
-        const i = data.telemetry_ridge.I_isolation;
-        const d = data.telemetry_ridge.D_distance;
-        const g = data.telemetry_ridge.G_gravity;
-        const e = data.telemetry_ridge.E_environment;
+        // Si falta un bloque entero, seguimos igual: esas celdas quedan en gris
+        // en vez de cortar la función y dejar la pantalla congelada.
+        const ridge = data.telemetry_ridge || {};
+        const r = ridge.R_radiation  || {};
+        const i = ridge.I_isolation  || {};
+        const d = ridge.D_distance   || {};
+        const g = ridge.G_gravity    || {};
+        const e = ridge.E_environment || {};
 
-        currentBpm = g.heart_rate_bpm;
-        ecgBpmDisplay.textContent = `${currentBpm} LPM`;
+        if (esNum(g.heart_rate_bpm)) currentBpm = g.heart_rate_bpm;
+        ecgBpmDisplay.textContent = esNum(g.heart_rate_bpm) ? `${g.heart_rate_bpm} LPM` : '— LPM';
 
         // R - Radiación
-        setMetric('val_rad_acute', r.acute_event_mSv.toFixed(1), r.acute_event_mSv > 250);
-        setMetric('val_rad_career', r.career_accumulated_mSv.toFixed(1), r.career_accumulated_mSv > 600);
-        const careerPct = Math.min(100, (r.career_accumulated_mSv / 600) * 100);
+        setMetric('val_rad_acute', f(r.acute_event_mSv, 1), r.acute_event_mSv > 250);
+        setMetric('val_rad_career', f(r.career_accumulated_mSv, 1), r.career_accumulated_mSv > 600);
+        const careerPct = esNum(r.career_accumulated_mSv)
+            ? Math.min(100, (r.career_accumulated_mSv / 600) * 100) : 0;
         const careerBar = document.getElementById('careerRadBar');
         if (careerBar) {
             careerBar.style.width = `${careerPct}%`;
@@ -282,25 +300,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // I - Aislamiento
-        setMetric('val_sleep_hours', i.sleep_hours_last_24h.toFixed(1), false, i.sleep_hours_last_24h < 6.0);
-        setMetric('val_hrv_drop', i.hrv_rmssd_drop_pct.toFixed(1), false, i.hrv_rmssd_drop_pct > 25.0);
-        setMetric('val_pvt_ms', i.pvt_reaction_time_ms, false, i.pvt_reaction_time_ms > 350);
+        setMetric('val_sleep_hours', f(i.sleep_hours_last_24h, 1), false, i.sleep_hours_last_24h < 6.0);
+        setMetric('val_hrv_drop', f(i.hrv_rmssd_drop_pct, 1), false, i.hrv_rmssd_drop_pct > 25.0);
+        setMetric('val_pvt_ms', n(i.pvt_reaction_time_ms), false, i.pvt_reaction_time_ms > 350);
 
         // D - Distancia
-        setMetric('val_comm_delay', d.comm_delay_oneway_min.toFixed(1), false);
-        setMetric('val_med_supply', d.med_supply_days_remaining, false);
+        setMetric('val_comm_delay', f(d.comm_delay_oneway_min, 1), false);
+        setMetric('val_med_supply', n(d.med_supply_days_remaining), false);
 
         // G - Gravedad / Cardio / SANS
-        setMetric('val_hr', g.heart_rate_bpm, g.heart_rate_bpm > 110 || g.heart_rate_bpm === 0);
-        const bpText = `${g.blood_pressure_sys}/${g.blood_pressure_dia}`;
+        setMetric('val_hr', n(g.heart_rate_bpm), g.heart_rate_bpm > 110 || g.heart_rate_bpm === 0);
+        const bpText = (esNum(g.blood_pressure_sys) && esNum(g.blood_pressure_dia))
+            ? `${g.blood_pressure_sys}/${g.blood_pressure_dia}` : null;
         setMetric('val_bp', bpText, g.blood_pressure_sys > 155 || g.blood_pressure_dia > 95);
-        setMetric('val_onsd', g.onsd_mm.toFixed(2), g.onsd_mm > 5.8);
-        setMetric('val_exercise', g.exercise_completed_hours.toFixed(1), false);
+        setMetric('val_onsd', f(g.onsd_mm, 2), g.onsd_mm > 5.8);
+        setMetric('val_exercise', f(g.exercise_completed_hours, 1), false);
 
         // E - Entorno
-        setMetric('val_ppco2', e.cabin_ppco2_mmHg.toFixed(2), e.cabin_ppco2_mmHg > 3.0);
-        setMetric('val_spo2', e.spo2_pct, e.spo2_pct < 95);
-        setMetric('val_temp', e.body_temperature_c.toFixed(1), e.body_temperature_c > 38.5);
+        setMetric('val_ppco2', f(e.cabin_ppco2_mmHg, 2), e.cabin_ppco2_mmHg > 3.0);
+        setMetric('val_spo2', n(e.spo2_pct), e.spo2_pct < 95);
+        setMetric('val_temp', f(e.body_temperature_c, 1), e.body_temperature_c > 38.5);
 
         // Reinicio automático de indicador SOMA si se restituyen las constantes
         if (surv.vital_signs_present && !surv.sos_panic_button_active && surv.cabin_pressure_nominal) {
@@ -318,16 +337,38 @@ document.addEventListener('DOMContentLoaded', () => {
     function setMetric(elemId, value, isCrit, isWarn = false) {
         const el = document.getElementById(elemId);
         if (!el) return;
-        el.textContent = value;
+
+        // Tarea 37: tres estados, no dos. La ausencia de dato no es salud.
+        const sinDato = (value === null || value === undefined || value === '');
+        el.textContent = sinDato ? '—' : value;
+
         const cell = el.closest('.metric-cell');
         if (cell) {
-            cell.classList.remove('critical-breach', 'warning-breach');
-            if (isCrit) {
+            cell.classList.remove('critical-breach', 'warning-breach', 'no-data');
+            if (sinDato) {
+                cell.classList.add('no-data');
+            } else if (isCrit) {
                 cell.classList.add('critical-breach');
             } else if (isWarn) {
                 cell.classList.add('warning-breach');
             }
         }
+    }
+
+    // Marca todo el tablero como sin medición. Se usa al arrancar (antes del
+    // primer mensaje) y cuando se cae la conexión: así nadie lee como actual
+    // un número que quedó de hace diez minutos.
+    function marcarTodoSinMedicion() {
+        document.querySelectorAll('.metric-cell').forEach(cell => {
+            cell.classList.remove('critical-breach', 'warning-breach');
+            cell.classList.add('no-data');
+            const val = cell.querySelector('.metric-value');
+            if (val) val.textContent = '—';
+        });
+        healthScoreNum.textContent = '—';
+        healthScoreNum.style.color = 'var(--text-muted)';
+        healthGaugeProgress.style.stroke = 'var(--text-muted)';
+        healthGaugeProgress.style.strokeDashoffset = 440;
     }
 
     function updateSurvivalPill(element, isNominal, nominalText, dangerText) {
@@ -457,6 +498,9 @@ document.addEventListener('DOMContentLoaded', () => {
         window.aerospaceAudio.stopAlarm();
         sendCommand('RESET_SURVIVAL');
     });
+
+    // Arrancamos sin dato: los números del HTML son de relleno, no mediciones.
+    marcarTodoSinMedicion();
 
     // Iniciar conexión WebSocket
     connectWebSocket();
